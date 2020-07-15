@@ -19,7 +19,7 @@
 #ifndef _CONFIG_H_
 #define _CONFIG_H_
 
-#include "include/cjson/cJSON.h"
+#include "../include/cjson/cJSON.h"
 
 typedef enum {
     OBJECT,

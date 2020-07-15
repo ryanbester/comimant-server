@@ -22,7 +22,7 @@
 #include <errno.h>
 
 #include "config.h"
-#include "include/cjson/cJSON.h"
+#include "../include/cjson/cJSON.h"
 
 int read_config(config_file_t *config_file) {
     FILE *fp;
