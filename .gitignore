@@ -5,3 +5,5 @@ coverage
 .idea
 config.json
 /cmake-build-debug
+/run/
+/docs/

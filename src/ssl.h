@@ -16,27 +16,36 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+#ifndef _SSL_H_
+#define _SSL_H_
+
+#include <openssl/ssl.h>
+#include <openssl/err.h>
+
 /**
- * @file
- * @brief Main.h
+ * Initialises OpenSSL, loading the strings and SSL algorithms.
  */
+void
+init_openssl();
 
-#ifndef _MAIN_H_
-#define _MAIN_H_
+/**
+ * Cleans up OpenSSL.
+ */
+void
+cleanup_openssl();
 
-#include "config.h"
+/**
+ * Creates a new SSL context.
+ * @return The SSL context structure.
+ */
+SSL_CTX *
+create_context();
 
-#define APP_NAME "comimant-server"
-#define APP_TITLE "Comimant Server"
+/**
+ * Configures an SSL context.
+ * @param ctx[in] The SSL context structure.
+ */
+int
+configure_context(SSL_CTX *ctx);
 
-#define LOG_I(format...) syslog(LOG_MAKEPRI(LOG_LOCAL1, LOG_INFO), format)
-#define LOG_N(format...) syslog(LOG_MAKEPRI(LOG_LOCAL1, LOG_NOTICE), format)
-#define LOG_W(format...) syslog(LOG_MAKEPRI(LOG_LOCAL1, LOG_WARNING), format)
-#define LOG_E(format...) syslog(LOG_MAKEPRI(LOG_LOCAL1, LOG_ERR), format)
-#define LOG_D(format...) syslog(LOG_MAKEPRI(LOG_LOCAL1, LOG_DEBUG), format)
-
-log_options_t log_options;
-ssl_options_t ssl_options;
-listen_options_t listen_options;
-
-#endif //_MAIN_H_
+#endif //_SSL_H_
