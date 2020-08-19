@@ -31,8 +31,11 @@
 #include <poll.h>
 
 #include "worker.h"
-#include "main.h"
+#include "config/config_listen.h"
 #include "ssl.h"
+#include "plugins/plugins.h"
+
+#include "config/config.h"
 
 #include "../include/log/log.h"
 
@@ -54,7 +57,8 @@ int epoll_fd = -1;
 SSL_CTX *ctx;
 
 void
-channel_update(channel_t *ch) {
+channel_update(channel_t *ch)
+{
     struct epoll_event ev = {0};
     ev.events = ch->events;
     ev.data.ptr = ch;
@@ -64,7 +68,8 @@ channel_update(channel_t *ch) {
 }
 
 void
-channel_close(channel_t *ch) {
+channel_close(channel_t *ch)
+{
     close(ch->fd);
     if (NULL != ch->ssl) {
         SSL_shutdown(ch->ssl);
@@ -75,7 +80,8 @@ channel_close(channel_t *ch) {
 }
 
 void *
-get_in_addr(struct sockaddr *sa) {
+get_in_addr(struct sockaddr *sa)
+{
     if (sa->sa_family == AF_INET) {
         return &(((struct sockaddr_in *) sa)->sin_addr);
     }
@@ -84,7 +90,8 @@ get_in_addr(struct sockaddr *sa) {
 }
 
 int
-set_non_blocking(int fd) {
+set_non_blocking(int fd)
+{
     int flags = fcntl(fd, F_GETFL, 0);
     if (flags == -1) {
         return -1;
@@ -99,7 +106,8 @@ set_non_blocking(int fd) {
 }
 
 int
-get_unix_fd() {
+get_unix_fd()
+{
     if (1 == listen_options.lo_unix_enabled) {
         log_info("Starting unix listener...");
 
@@ -144,7 +152,8 @@ get_unix_fd() {
 }
 
 int
-get_tcp_fd() {
+get_tcp_fd()
+{
     if (1 == listen_options.lo_tcp_enabled) {
         // Start TCP listener
         log_info("Starting TCP listener...");
@@ -208,7 +217,8 @@ get_tcp_fd() {
 }
 
 void
-handle_unix_accept() {
+handle_unix_accept()
+{
     char remote_ip[INET6_ADDRSTRLEN];
     struct sockaddr_storage remote_addr;
 
@@ -246,7 +256,8 @@ handle_unix_accept() {
 }
 
 void
-handle_tcp_accept() {
+handle_tcp_accept()
+{
     char remote_ip[INET6_ADDRSTRLEN];
     struct sockaddr_storage remote_addr;
 
@@ -284,7 +295,8 @@ handle_tcp_accept() {
 }
 
 void
-handle_handshake(channel_t *ch) {
+handle_handshake(channel_t *ch)
+{
     if (0 == ch->net_connected) {
         // Wait until file descriptor is ready for writing data to
         struct pollfd p_fd;
@@ -348,7 +360,8 @@ handle_handshake(channel_t *ch) {
 }
 
 void
-handle_data_read(channel_t *ch) {
+handle_data_read(channel_t *ch)
+{
     char buf[4096] = {0};
     int rd = SSL_read(ch->ssl, buf, sizeof(buf));
     int ssl_err = SSL_get_error(ch->ssl, rd);
@@ -379,7 +392,8 @@ handle_data_read(channel_t *ch) {
 }
 
 void
-socket_read(channel_t *ch) {
+socket_read(channel_t *ch)
+{
     if (ch->fd == unix_fd) {
         // Handle accept on UNIX socket
         return handle_unix_accept();
@@ -398,7 +412,8 @@ socket_read(channel_t *ch) {
 }
 
 void
-socket_write(channel_t *ch) {
+socket_write(channel_t *ch)
+{
     if (0 == ch->ssl_connected) {
         // Establish an SSL connection
         return handle_handshake(ch);
@@ -411,7 +426,8 @@ socket_write(channel_t *ch) {
 }
 
 int
-perform_loop_cycle() {
+perform_loop_cycle()
+{
     struct epoll_event events[MAX_FDS];
 
     int n_ready = epoll_wait(epoll_fd, events, MAX_FDS, -1);
@@ -429,7 +445,8 @@ perform_loop_cycle() {
 }
 
 int
-worker_listen() {
+worker_listen()
+{
     fd_set master, read_fds;
     int socket_count = 0;
     int fd_max;
@@ -513,8 +530,11 @@ worker_listen() {
         perform_loop_cycle();
     }
 
+    SSL_cleanup_context(ctx);
     free(unix_ch);
     free(tcp_ch);
+    deactivate_plugins();
+    free_plugins();
     return 0;
 }
 

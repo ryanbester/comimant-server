@@ -16,7 +16,4 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef _MAIN_H_
-#define _MAIN_H_
-
-#endif //_MAIN_H_
+#include "util.h"

@@ -29,7 +29,11 @@
 #include "log.h"
 #include "daemon.h"
 
+#include "config/config_log.h"
+
 #include "../include/log/log.h"
+
+#include "plugins/plugins.h"
 
 static int verbose_flag;
 static char pid_file[PATH_MAX] = DEFAULT_PID_FILE;
@@ -41,23 +45,29 @@ void
 show_help();
 
 int
+init_plugins(const char *plugins_dir);
+
+int
 load_config_options(const char *file_name);
 
 int
-main(int argc, char **argv) {
-    char config_file[PATH_MAX] = "/etc/comimant-server/config.json";\
+main(int argc, char **argv)
+{
+    char config_file[PATH_MAX] = "/etc/comimant-server/config.json";
+    char plugins_dir[PATH_MAX] = "/etc/comimant-server/plugins";
 
     while (1) {
         static struct option long_options[] = {
-                {"help",    no_argument,       0,             0},
-                {"verbose", no_argument,       &verbose_flag, 1},
-                {"config",  required_argument, 0,             'f'},
-                {0, 0,                         0,             0},
+                {"help",        no_argument,       0,             0},
+                {"verbose",     no_argument,       &verbose_flag, 1},
+                {"config",      required_argument, 0,             'f'},
+                {"plugins-dir", required_argument, 0,             'p'},
+                {0, 0,                             0,             0},
         };
 
         int option_index = 0;
 
-        int c = getopt_long(argc, argv, "vf:", long_options, &option_index);
+        int c = getopt_long(argc, argv, "vf:p:", long_options, &option_index);
         if (c == -1) {
             break;
         }
@@ -70,6 +80,7 @@ main(int argc, char **argv) {
 
                 if (!strcmp(long_options[option_index].name, "help")) {
                     show_help();
+                    deactivate_plugins();
                     return 0;
                 }
 
@@ -77,23 +88,37 @@ main(int argc, char **argv) {
                     strcpy(config_file, optarg);
                 }
 
+                if (!strcmp(long_options[option_index].name, "plugins-dir")) {
+                    strcpy(plugins_dir, optarg);
+                }
+
                 break;
             case 'f':
                 strcpy(config_file, optarg);
+                break;
+            case 'p':
+                strcpy(plugins_dir, optarg);
                 break;
             case 'v':
                 verbose_flag = 1;
                 break;
             case '?':
                 show_opt_err();
+                deactivate_plugins();
                 return 1;
             default:
                 show_opt_err();
+                deactivate_plugins();
                 return 1;
         }
     }
 
+    if (-1 == init_plugins(plugins_dir)) {
+        return 1;
+    }
+
     if (-1 == load_config_options(config_file)) {
+        deactivate_plugins();
         return 1;
     }
 
@@ -163,21 +188,48 @@ main(int argc, char **argv) {
     }
 
     exit:
+    deactivate_plugins();
+    free_plugins();
     return 0;
 }
 
 void
-show_opt_err() {
+show_opt_err()
+{
     printf("Try 'comimant-server --help' for more information.\n");
 }
 
 void
-show_help() {
+show_help()
+{
     printf("Usage: comimant-server [OPTION]...\n");
 }
 
 int
-load_config_options(const char *file_name) {
+init_plugins(const char *plugins_dir)
+{
+    if (-1 == load_plugins_dir(plugins_dir)) {
+        return -1;
+    }
+
+    if (-1 == load_plugins()) {
+        return -1;
+    }
+
+    if (-1 == register_plugins()) {
+        return -1;
+    }
+
+    if (-1 == activate_plugins()) {
+        return -1;
+    }
+
+    return 0;
+}
+
+int
+load_config_options(const char *file_name)
+{
     config_file_t config;
     memset(&config, 0, sizeof(config));
     config.file_name = file_name;
@@ -192,27 +244,13 @@ load_config_options(const char *file_name) {
         goto fail;
     }
 
-    memset(&log_options, 0, sizeof(log_options));
-    if (-1 == load_log_options(&config, &log_options)) {
-        fprintf(stderr, "Cannot start Comimant Server: Error loading log options.\n");
-        goto fail;
-    }
+    init_default_config_sections();
+    init_plugin_config_sections();
+
+    load_config_sections(&config);
 
     if (-1 == init_log()) {
         fprintf(stderr, "Cannot start Comimant Server: Error initiating log.\n");
-        goto fail;
-    }
-
-    memset(&ssl_options, 0, sizeof(ssl_options));
-    if (-1 == load_ssl_options(&config, &ssl_options)) {
-        fprintf(stderr, "Cannot start Comimant Server: Error loading SSL options.\n");
-        goto fail;
-    }
-
-    memset(&listen_options, 0, sizeof(listen_options));
-
-    if (-1 == load_listen_options(&config, &listen_options)) {
-        fprintf(stderr, "Cannot start Comimant Server: Error loading listen options.\n");
         goto fail;
     }
 

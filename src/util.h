@@ -16,7 +16,32 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef _MAIN_H_
-#define _MAIN_H_
+#ifndef _UTIL_H_
+#define _UTIL_H_
 
-#endif //_MAIN_H_
+#if defined _WIN32 || defined __CYGWIN__
+#ifdef BUILDING_DLL
+#ifdef __GNUC__
+#define SO_PUBLIC __attribute__ ((dllexport))
+#else
+#define SO_PUBLIC __declspec(dllexport)
+#endif
+#else
+#ifdef __GNUC__
+#define SO_PUBLIC __attribute__ ((dllimport))
+#else
+#define SO_PUBLIC __declspec(dllimport)
+#endif
+#endif
+#define SO_LOCAL
+#else
+#if __GNUC__ >= 4
+#define SO_PUBLIC __attribute__ ((visibility("default")))
+#define SO_LOCAL __attribute__ ((visibility("hidden")))
+#else
+#define SO_PUBLIC
+#define SO_LOCAL
+#endif
+#endif
+
+#endif //_UTIL_H_

@@ -18,6 +18,8 @@
 
 #include <stdarg.h>
 
+#include "config/config_log.h"
+
 #include "log.h"
 #include "../include/log/log.h"
 

@@ -35,6 +35,20 @@ void
 cleanup_openssl();
 
 /**
+ * Initialise SSL key logging. This will not do anything unless the SSLKEYLOGFILE environment variable is set.
+ */
+void
+init_keylogging(SSL_CTX *ctx);
+
+/**
+ * OpenSSL key logging callback.
+ * @param ssl The SSL structure.
+ * @param line The line to print.
+ */
+void
+keylog_callback(const SSL *ssl, const char *line);
+
+/**
  * Creates a new SSL context.
  * @return The SSL context structure.
  */
@@ -47,5 +61,12 @@ create_context();
  */
 int
 configure_context(SSL_CTX *ctx);
+
+/**
+ * Cleanup the SSL context.
+ * @param ctx The SSL context.
+ */
+void
+SSL_cleanup_context(SSL_CTX *ctx);
 
 #endif //_SSL_H_

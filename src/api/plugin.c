@@ -16,7 +16,24 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef _MAIN_H_
-#define _MAIN_H_
+#include <stdio.h>
+#include <stdlib.h>
 
-#endif //_MAIN_H_
+#include "plugin.h"
+#include "../plugins/plugins.h"
+#include "../plugins/events.h"
+
+SO_PUBLIC void
+set_plugin_details(plugin_t *plugin, plugin_details_t *plugin_details)
+{
+    // Copy to stop dangling pointers
+    plugin_details_t *new_details = malloc(sizeof(plugin_details_t));
+    *new_details = *plugin_details;
+    plugin->details = new_details;
+}
+
+SO_PUBLIC void
+register_event(plugin_t *plugin, char *name, event_callback callback)
+{
+    add_event(plugin, name, callback);
+}

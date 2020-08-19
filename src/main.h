@@ -24,7 +24,7 @@
 #ifndef _MAIN_H_
 #define _MAIN_H_
 
-#include "config.h"
+#include "config/config.h"
 
 #define APP_NAME "comimant-server"
 #define APP_TITLE "Comimant Server"
@@ -34,9 +34,5 @@
 #define LOG_W(format...) syslog(LOG_MAKEPRI(LOG_LOCAL1, LOG_WARNING), format)
 #define LOG_E(format...) syslog(LOG_MAKEPRI(LOG_LOCAL1, LOG_ERR), format)
 #define LOG_D(format...) syslog(LOG_MAKEPRI(LOG_LOCAL1, LOG_DEBUG), format)
-
-log_options_t log_options;
-ssl_options_t ssl_options;
-listen_options_t listen_options;
 
 #endif //_MAIN_H_

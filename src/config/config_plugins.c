@@ -16,7 +16,27 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef _MAIN_H_
-#define _MAIN_H_
+#include <string.h>
 
-#endif //_MAIN_H_
+#include "config_plugins.h"
+#include "config_util.h"
+
+int
+load_plugins_options(config_file_t *config)
+{
+    if (NULL == config->config_json) {
+        return -1;
+    }
+
+    // Initiate temporary variables
+    const cJSON *plugins_obj = NULL;
+
+    plugins_obj = cJSON_GetObjectItemCaseSensitive(config->config_json, "plugins");
+    if (NULL != plugins_obj) {
+        if (-1 == check_config_option(plugins_obj, OBJECT, "plugins")) {
+            return -1;
+        }
+    }
+
+    return 0;
+}

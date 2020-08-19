@@ -25,7 +25,7 @@
 #define _WORKER_H_
 
 #include <openssl/ssl.h>
-#include "config.h"
+#include "config/config.h"
 
 
 /**

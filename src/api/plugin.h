@@ -16,7 +16,16 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef _MAIN_H_
-#define _MAIN_H_
+#ifndef _PLUGIN_H_
+#define _PLUGIN_H_
 
-#endif //_MAIN_H_
+#include "../util.h"
+#include "../plugins/plugins.h"
+
+SO_PUBLIC void
+set_plugin_details(plugin_t *plugin, plugin_details_t *plugin_details);
+
+SO_PUBLIC void
+register_event(plugin_t *plugin, char *name, event_callback callback);
+
+#endif //_PLUGIN_H_
