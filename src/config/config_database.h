@@ -16,13 +16,35 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef _MAIN_H_
-#define _MAIN_H_
+#ifndef _CONFIG_DATABASE_H_
+#define _CONFIG_DATABASE_H_
 
-uint64_t
-decode_uvarint(const uint8_t *bytes);
+#include <linux/limits.h>
+#include "config_util.h"
 
+/**
+ * Database options.
+ */
+typedef struct {
+    char host[45];
+    int port;
+    char database[64];
+    char user[32];
+    char password[32];
+    char user_modify[32];
+    char password_modify[32];
+    char user_delete[32];
+    char password_delete[32];
+} database_options_t;
+
+database_options_t database_options;
+
+/**
+ * Loads the database options from the configuration file.
+ * @param[in] config The configuration object.
+ * @return 0 on success or -1 on error.
+ */
 int
-encode_uvarint(uint8_t *buffer, uint64_t value);
+load_database_options(config_file_t *config);
 
-#endif //_MAIN_H_
+#endif //_CONFIG_DATABASE_H_

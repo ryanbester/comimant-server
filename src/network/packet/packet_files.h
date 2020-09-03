@@ -16,13 +16,26 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef _MAIN_H_
-#define _MAIN_H_
+#ifndef _PACKET_FILES_H_
+#define _PACKET_FILES_H_
 
-uint64_t
-decode_uvarint(const uint8_t *bytes);
+#include "../packet.h"
+
+typedef struct retrieve_files_body {
+    uint8_t file_server_name[32];
+    uint8_t directory[4096];
+} retrieve_files_body_t;
+
+void
+handle_files_packet(const uint8_t *bytes, channel_t *channel);
 
 int
-encode_uvarint(uint8_t *buffer, uint64_t value);
+deserialize_retrieve_files_packet(const uint8_t *bytes, channel_t *channel);
 
-#endif //_MAIN_H_
+const uint8_t *
+serialize_retrieve_files_packet(channel_t *channel);
+
+void
+retrieve_files_free(channel_t *channel);
+
+#endif //_PACKET_FILES_H_

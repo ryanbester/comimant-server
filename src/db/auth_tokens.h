@@ -16,13 +16,16 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef _MAIN_H_
-#define _MAIN_H_
+#ifndef _AUTH_TOKENS_H_
+#define _AUTH_TOKENS_H_
 
-uint64_t
-decode_uvarint(const uint8_t *bytes);
+#include <mysql.h>
+#include "../network/packet.h"
 
 int
-encode_uvarint(uint8_t *buffer, uint64_t value);
+check_auth_token(uint8_t *auth_token, auth_details_t *details);
 
-#endif //_MAIN_H_
+int
+delete_auth_token(uint8_t *auth_token);
+
+#endif //_AUTH_TOKENS_H_

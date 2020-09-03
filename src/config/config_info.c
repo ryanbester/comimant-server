@@ -16,13 +16,33 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef _MAIN_H_
-#define _MAIN_H_
+#include <string.h>
+#include <stdio.h>
 
-uint64_t
-decode_uvarint(const uint8_t *bytes);
+#include "config_info.h"
+#include "config_util.h"
 
 int
-encode_uvarint(uint8_t *buffer, uint64_t value);
+load_info(config_file_t *config)
+{
+    if (NULL == config->config_json) {
+        return -1;
+    }
 
-#endif //_MAIN_H_
+    // Initiate temporary variables
+    const cJSON *info_obj = NULL;
+    const cJSON *server_name = NULL;
+
+    info_obj = cJSON_GetObjectItemCaseSensitive(config->config_json, "info");
+    if (-1 == check_config_option(info_obj, OBJECT, "info")) {
+        return -1;
+    }
+
+    server_name = cJSON_GetObjectItemCaseSensitive(info_obj, "server_name");
+    if (-1 == check_config_option(server_name, STRING, "info.server_name")) {
+        return -1;
+    }
+    strcpy(config_info.server_name, server_name->valuestring);
+
+    return 0;
+}

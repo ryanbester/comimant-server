@@ -3,6 +3,17 @@ project(comimant-server C)
 
 set(CMAKE_C_STANDARD 99)
 
+# MySQL
+include(FindPkgConfig)
+pkg_check_modules(LIBMYSQLCLIENT REQUIRED mysqlclient)
+
+foreach (FLAG ${LIBMYSQLCLIENT_CFLAGS_OTHER})
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${FLAG}")
+endforeach ()
+
+link_directories(${LIBMYSQLCLIENT_LIBRARY_DIRS})
+
+# OpenSSL
 find_package(OpenSSL REQUIRED)
 
 file(GLOB_RECURSE INCLUDE "include/*.h" "include/*.c")
@@ -22,4 +33,7 @@ add_library(comimant-server-api SHARED ${INCLUDE} ${Server_SOURCES} ${Server_HEA
 set_target_properties(comimant-server-api PROPERTIES PREFIX "" DEFINE_SYMBOL "")
 set_target_properties(comimant-server-api PROPERTIES OUTPUT_NAME "comimant")
 
-target_link_libraries(comimant-server OpenSSL::SSL OpenSSL::Crypto ${CMAKE_DL_LIBS})
+target_include_directories(comimant-server PRIVATE ${LIBMYSQLCLIENT_INCLUDE_DIRS})
+
+target_link_libraries(comimant-server OpenSSL::SSL OpenSSL::Crypto ${CMAKE_DL_LIBS} ${LIBMYSQLCLIENT_LIBRARIES})
+target_link_libraries(comimant-client OpenSSL::SSL OpenSSL::Crypto ${CMAKE_DL_LIBS})

@@ -16,13 +16,27 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef _MAIN_H_
-#define _MAIN_H_
+#ifndef _CONFIG_INFO_H_
+#define _CONFIG_INFO_H_
 
-uint64_t
-decode_uvarint(const uint8_t *bytes);
+#include <linux/limits.h>
+#include "config_util.h"
 
+/**
+ * Info.
+ */
+typedef struct {
+    char server_name[16];
+} config_info_t;
+
+config_info_t config_info;
+
+/**
+ * Loads the information from the configuration file.
+ * @param[in] config The configuration object.
+ * @return 0 on success or -1 on error.
+ */
 int
-encode_uvarint(uint8_t *buffer, uint64_t value);
+load_info(config_file_t *config);
 
-#endif //_MAIN_H_
+#endif //_CONFIG_INFO_H_

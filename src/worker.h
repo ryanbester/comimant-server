@@ -27,7 +27,6 @@
 #include <openssl/ssl.h>
 #include "config/config.h"
 
-
 /**
  * Keeps track of whether the main listening loop is running or not.
  */
@@ -42,6 +41,9 @@ typedef struct {
     int net_connected; /**< Whether the network connection has been established */
     int ssl_connected; /**< Whether the SSL handshake has been established */
     int events; /**< Stores the epoll events for convenience */
+    int bytes_to_read;
+
+    struct packet *packet; /**< Stores the packet. This will change throughout the lifetime of the channel. */
 } channel_t;
 
 /**

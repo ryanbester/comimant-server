@@ -24,10 +24,12 @@
 #include "config.h"
 #include "../../include/cjson/cJSON.h"
 
+#include "config_info.h"
 #include "config_log.h"
 #include "config_plugins.h"
 #include "config_ssl.h"
 #include "config_listen.h"
+#include "config_database.h"
 
 static config_section_t *config_sections = NULL;
 
@@ -87,10 +89,12 @@ parse_config(config_file_t *config)
 void
 init_default_config_sections()
 {
+    add_config_section_with_name("info", load_info);
     add_config_section_with_name("log", load_log_options);
     add_config_section_with_name("plugins", load_plugins_options);
     add_config_section_with_name("ssl", load_ssl_options);
     add_config_section_with_name("listen", load_listen_options);
+    add_config_section_with_name("database", load_database_options);
 }
 
 void

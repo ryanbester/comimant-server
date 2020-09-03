@@ -16,13 +16,21 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef _MAIN_H_
-#define _MAIN_H_
+#ifndef _DATABASE_H_
+#define _DATABASE_H_
 
-uint64_t
-decode_uvarint(const uint8_t *bytes);
+#include <mysql.h>
+
+typedef enum {
+    NORMAL,
+    MODIFY,
+    DELETE
+} database_mode_t;
 
 int
-encode_uvarint(uint8_t *buffer, uint64_t value);
+database_connect(MYSQL **conn, database_mode_t mode);
 
-#endif //_MAIN_H_
+void
+database_close(MYSQL *conn);
+
+#endif //_DATABASE_H_

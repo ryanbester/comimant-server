@@ -34,10 +34,9 @@
 #include "config/config_listen.h"
 #include "ssl.h"
 #include "plugins/plugins.h"
-
-#include "config/config.h"
-
+#include "network/packet.h"
 #include "../include/log/log.h"
+#include "config/config_log.h"
 
 #define MAX_FDS 1024
 
@@ -362,20 +361,87 @@ handle_handshake(channel_t *ch)
 void
 handle_data_read(channel_t *ch)
 {
-    char buf[4096] = {0};
-    int rd = SSL_read(ch->ssl, buf, sizeof(buf));
-    int ssl_err = SSL_get_error(ch->ssl, rd);
+    int rd;
+    int ssl_err;
+
+    // TODO: Implement non blocking reads?
+
+    // Clear packet struct
+    ch->packet = NULL;
+
+    // Start of packet
+    log_info("Start of packet");
+    uint8_t buf[10] = {0};
+    rd = SSL_read(ch->ssl, buf, sizeof(buf));
+    ssl_err = SSL_get_error(ch->ssl, rd);
+
     if (rd > 0) {
-        if (0 == strncmp(buf, "close", 5)) {
-            const char *msg = "Closing connection";
-            int wd = SSL_write(ch->ssl, msg, strlen(msg));
-            log_info("SSL_Write %d bytes", wd);
+        log_info("Got packet header");
+        // Get length from packet headers.
+        int length = get_packet_length(buf, ch);
+        if (-1 == length) {
+            // Invalid packet. Close connection.
+            free_packet(ch);
             channel_close(ch);
             return;
         }
-        int wd = SSL_write(ch->ssl, buf, strlen(buf));
+
+        log_info("Bytes to read: %d", ch->bytes_to_read);
+
+        uint8_t *bytes = malloc(sizeof(uint8_t) * length);
+        memcpy(bytes, buf, sizeof(buf));
+
+        int index = 10;
+
+        // Read in 1kB chunks until no data is left to be read.
+        while (ch->bytes_to_read > 0) {
+            uint8_t data[1024] = {0};
+            rd = SSL_read(ch->ssl, data, sizeof(data));
+            log_info("Read more bytes");
+
+            if (rd > 0) {
+                ch->bytes_to_read -= rd;
+                memcpy(&bytes[index], data, rd);
+                index += rd;
+                continue;
+            }
+
+            break;
+        }
+
+        if (-1 == deserialize_request(bytes, ch)) {
+            log_info("Error deserializing packet.");
+            if (NULL != ch->packet->free_data) {
+                ch->packet->free_data(ch);
+            }
+            free_packet(ch);
+            channel_close(ch);
+            return;
+        }
+        free(bytes);
+
+        if (-1 == process_data(ch)) {
+            log_info("Error processing packet data.");
+            if (NULL != ch->packet->free_data) {
+                ch->packet->free_data(ch);
+            }
+            free_packet(ch);
+            channel_close(ch);
+            return;
+        }
+
+        const uint8_t *res = serialize_response(ch);
+        log_info("Response: %s", res);
+
+        int wd = SSL_write(ch->ssl, res, sizeof(res));
         log_info("SSL_Write %d bytes", wd);
+
+        if (NULL != ch->packet->free_data) {
+            ch->packet->free_data(ch);
+        }
+        free_packet(ch);
     }
+
     if (rd < 0 && ssl_err != SSL_ERROR_WANT_READ) {
         log_error("SSL_read return %d error %d errno %d msg %s", rd, ssl_err, errno, strerror(errno));
         channel_close(ch);
